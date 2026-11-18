@@ -11,6 +11,7 @@ npx newman run docs/postman/KANTINKU_API_v1.postman_collection.json
 - Waktu: 18 November 2026, 21:53
 - Requests: **47** — Failed: **0**
 - Assertions: **94** — Failed: **0**
+- Sebaran kode response: `200` ×26, `201` ×7, `422` ×8, `404` ×3, `401` ×2, `403` ×1, **`5xx` = 0**
 - Durasi: 2.6 detik
 - Laporan HTML: `docs/screenshots/kantin-report.html`
 - Screenshot ringkasan: `docs/screenshots/01-newman-summary.png`
