@@ -47,6 +47,18 @@ npx newman run docs/postman/KANTINKU_API_v1.postman_collection.json \
 
 > Butuh `newman-reporter-htmlextra` sekali: `npm i -g newman-reporter-htmlextra`.
 
+## Cara B+ — laporan HTML + screenshot per test (yang dipakai di repo ini)
+
+Semua PNG di `docs/screenshots/` dibuat dari report JSON run newman, lewat
+`docs/postman/make_evidence.py`. Isinya per test: method+URL, kode status, durasi,
+request body, response body asli, dan status assertion.
+
+```bash
+npx newman run docs/postman/KANTINKU_API_v1.postman_collection.json \
+  --reporters json --reporter-json-export /tmp/run.json
+python3 docs/postman/make_evidence.py /tmp/run.json
+```
+
 ## Cara C — Script Python (paling cepat untuk angka, bukan screenshot)
 
 ```bash
