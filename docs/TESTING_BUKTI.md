@@ -1,64 +1,58 @@
 # Bukti Test Postman — KANTINKU API v1
 
-Dijalankan dengan **newman** (runner resmi Postman) memakai file collection yang sama
-yang ada di `docs/postman/`. Jadi angka di bawah identik dengan yang muncul kalau
-collection dijalankan dari Postman Desktop.
+Ada dua bukti, keduanya dari eksekusi nyata (bukan template):
+
+## 1. Postman Desktop — Runner
+
+Screenshot: `docs/screenshots/02-postman-runner-results.png`
+
+- Ran today at **22:06:02**, environment: **none** (pakai collection variable)
+- Iterations **1** · Duration **2s 253ms** · All tests **94**
+- **Passed 94 · Failed 0 · Skipped 0 · Errors 0** · Avg response **32 ms**
+- Hasil per request bisa dilihat di kartu di bawah ringkasan; tiap kartu punya dua assertion:
+  `PASS HTTP <kode>` dan `PASS format (status,message,data|errors)`.
+
+Cara reproduksi di Postman Desktop:
+
+1. Import `docs/postman/KANTINKU_API_v1.postman_collection.json`
+2. Klik kanan collection → **Run** (atau tab Runner → pilih collection)
+3. **Start run**
+
+## 2. Newman CLI (runner resmi Postman, headless)
 
 ```bash
 npx newman run docs/postman/KANTINKU_API_v1.postman_collection.json
 ```
 
-- Waktu: 18 November 2026, 21:53
-- Requests: **47** — Failed: **0**
-- Assertions: **94** — Failed: **0**
-- Sebaran kode response: `200` ×26, `201` ×7, `422` ×8, `404` ×3, `401` ×2, `403` ×1, **`5xx` = 0**
-- Durasi: 2.6 detik
+- Requests **47** · Assertions **94** · Failed **0** · Durasi 2,6 detik
+- Sebaran kode: `200` ×26, `201` ×7, `422` ×8, `404` ×3, `401` ×2, `403` ×1, **`5xx` = 0**
 - Laporan HTML: `docs/screenshots/kantin-report.html`
 - Screenshot ringkasan: `docs/screenshots/01-newman-summary.png`
 
-## Ringkasan per folder
-
-| Folder | Request | Semua assertion lulus |
-|---|---|---|
-| 0. Setup (token & id) | 3 | ya |
-| 1. Auth | 4 | ya |
-| 2. User Profile | 2 | ya |
-| 3. Categories | 5 | ya |
-| 4. Products | 10 | ya |
-| 5. Cart | 6 | ya |
-| 6. Orders | 11 | ya |
-| 7. Payments | 5 | ya |
-| 8. Logout | 1 | ya |
+Angka Desktop dan Newman sama karena menjalankan file collection yang sama.
 
 ## Kenapa 47 request padahal endpoint cuma 26
 
-26 itu jumlah route aktif. Collection menjalankan tiap endpoint **lebih dari sekali**
-untuk skenario berbeda — misalnya `POST /auth/login` dipanggil 3x (customer, admin,
-password salah), `POST /products` 4x (sukses, 422, 403, sekali pakai untuk DELETE),
-`POST /orders` 2x (201 dan 422). Totalnya 47 request.
+26 itu jumlah route aktif. Collection menjalankan tiap endpoint lebih dari sekali untuk
+skenario berbeda — `POST /auth/login` 3x (customer, admin, password salah),
+`POST /products` 4x (201, 422, 403, sekali pakai untuk DELETE), `POST /orders` 2x (201, 422).
 
-## Kenapa ini bukan sekadar "happy path"
-
-Yang diuji bukan cuma sukses, tapi juga jalur gagal yang diminta rubrik:
+## Yang diuji bukan cuma happy path
 
 - **422** — register email duplikat, kategori duplikat, produk invalid (`category_id` tidak ada,
   `price` negatif, nama kosong), order `items: []`, qty 0, status tidak dikenal, metode bayar tidak dikenal
 - **401** — login password salah, `GET /orders` tanpa token
 - **403** — customer mencoba `POST /products`
 - **404** — produk/order/item keranjang yang tidak ada
-- **500** — nol. Tidak ada satu pun response 5xx selama run.
+- **500** — nol, tidak ada satu pun response 5xx selama run
 
-Setiap request punya assertion yang mengecek **kode status** dan **bentuk response**
-(`{status, message, data}` untuk sukses, `{status, message, errors}` untuk error),
-bukan cuma "request terkirim".
-
-## Cara reproduksi
+## Reproduksi dari nol
 
 ```bash
-php artisan migrate:fresh --seed      # database bersih
+php artisan migrate:fresh --seed      # DB bersih (wajib sebelum run ulang)
 php artisan serve                     # terminal lain, port 8000
 npx newman run docs/postman/KANTINKU_API_v1.postman_collection.json
 ```
 
-Kalau tombol **Run** di Postman Desktop yang dipakai, hasilnya sama persis —
-Postman Desktop menjalankan collection yang sama.
+Tanpa `migrate:fresh`, beberapa test unik (email, nama kategori) akan 422 karena datanya
+sudah ada — itu perilaku benar, bukan bug.
