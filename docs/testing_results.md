@@ -1,661 +1,246 @@
-# Testing Results — KANTINKU API
+# Testing Results — KANTINKU API v1
 
-- Base URL: `http://127.0.0.1:8000/api/v1`
-- Waktu eksekusi: 2026-11-18T21:22:00
-- Hasil: **25/25 test lulus**
-- Dijalankan dari `docs/postman/run_tests.py` (isi tabel = response asli, bukan tulisan tangan)
+- Base URL: `http://127.0.0.1:8000/api/v1` (`php artisan serve`)
+- Sumber data: `newman run docs/postman/KANTINKU_API_v1.postman_collection.json`
+- Hasil run: **47 request, 94 assertion, 0 gagal**
+- Semua angka & body di bawah dibaca dari report JSON run itu sendiri, bukan diketik manual.
 
-| # | Test | Request | Expected | Actual | Status |
+## Ringkasan bukti
+
+| # | Test | Endpoint | Status | Assertion | File bukti |
 |---|---|---|---|---|---|
-| 1 | Register user baru | `POST /auth/register` | 201 | 201 | PASS |
-| 2 | Login dan dapat token | `POST /auth/login` | 200 | 200 | PASS |
-| 3 | Profil dari token | `GET /auth/me` | 200 | 200 | PASS |
-| 4 | Daftar produk + pagination meta | `GET /products?limit=3` | 200 | 200 | PASS |
-| 5 | Detail produk | `GET /products/15` | 200 | 200 | PASS |
-| 6 | Buat pesanan valid | `POST /orders` | 201 | 201 | PASS |
-| 7 | Daftar pesanan milik sendiri | `GET /orders` | 200 | 200 | PASS |
-| 8 | Validasi: items kosong | `POST /orders` | 422 | 422 | PASS |
-| 9 | Tanpa token | `GET /orders` | 401 | 401 | PASS |
-| 10 | Logout | `POST /auth/logout` | 200 | 200 | PASS |
-| 11 | Produk tidak ada | `GET /products/999999` | 404 | 404 | PASS |
-| 12 | Login admin | `POST /auth/login` | 200 | 200 | PASS |
-| 13 | Customer buat produk | `POST /products` | 403 | 403 | PASS |
-| 14 | Admin buat produk | `POST /products` | 201 | 201 | PASS |
-| 15 | Cari produk baru | `GET /products?search=Menu%20Uji%20212159` | 200 | 200 | PASS |
-| 16 | Tambah item ke keranjang | `POST /cart/items` | 201 | 201 | PASS |
-| 17 | Lihat keranjang | `GET /cart` | 200 | 200 | PASS |
-| 18 | Buat pembayaran | `POST /orders/10/payments` | 201 | 201 | PASS |
-| 19 | Detail pembayaran | `GET /orders/10/payment` | 200 | 200 | PASS |
-| 20 | Admin ubah status | `PATCH /orders/10/status` | 200 | 200 | PASS |
-| 21 | Riwayat status | `GET /orders/10/status-history` | 200 | 200 | PASS |
-| 22 | Status tidak valid | `PATCH /orders/10/status` | 422 | 422 | PASS |
-| 23 | Admin lihat semua pesanan | `GET /admin/orders` | 200 | 200 | PASS |
-| 24 | Ringkasan dashboard | `GET /admin/summary` | 200 | 200 | PASS |
-| 25 | Daftar kategori | `GET /categories` | 200 | 200 | PASS |
+| 1 | Login customer → simpan {{token}} | `POST /auth/login` | **200** | 2/2 PASS | `docs/screenshots/00-login-customer.png` |
+| 2 | Login admin → simpan {{adminToken}} | `POST /auth/login` | **200** | 2/2 PASS | `docs/screenshots/00-login-admin.png` |
+| 3 | Simpan product_id pertama | `GET /products` | **200** | 2/2 PASS | `docs/screenshots/00-product-id.png` |
+| 4 | Register user baru (201 + token) | `POST /auth/register` | **201** | 2/2 PASS | `docs/screenshots/01-register-201.png` |
+| 5 | Register email duplikat (422) | `POST /auth/register` | **422** | 2/2 PASS | `docs/screenshots/02-register-422.png` |
+| 6 | Login password salah (401) | `POST /auth/login` | **401** | 2/2 PASS | `docs/screenshots/03-login-401.png` |
+| 7 | Me | `GET /auth/me` | **200** | 2/2 PASS | `docs/screenshots/04-me-200.png` |
+| 8 | Get products + pagination | `GET /products` | **200** | 2/2 PASS | `docs/screenshots/05-products-200.png` |
+| 9 | Product tidak ada (404) | `GET /products/{id}` | **404** | 2/2 PASS | `docs/screenshots/06-product-404.png` |
+| 10 | Create product (admin, 201) | `POST /products` | **201** | 2/2 PASS | `docs/screenshots/07-product-201.png` |
+| 11 | Create order (201) | `POST /orders` | **201** | 2/2 PASS | `docs/screenshots/08-order-201.png` |
+| 12 | Create order items kosong (422) | `POST /orders` | **422** | 2/2 PASS | `docs/screenshots/09-order-422.png` |
+| 13 | Tanpa token (401) | `GET /orders` | **401** | 2/2 PASS | `docs/screenshots/10-no-token-401.png` |
+| 14 | Customer create product (403) | `POST /products` | **403** | 2/2 PASS | `docs/screenshots/11-customer-403.png` |
+| 15 | Create product invalid (422) | `POST /products` | **422** | 2/2 PASS | `docs/screenshots/12-product-invalid-422.png` |
+| 16 | Logout | `POST /auth/logout` | **200** | 2/2 PASS | `docs/screenshots/13-logout-200.png` |
 
-## Contoh Response
+## Bukti per test
 
-### Register user baru — POST `/auth/register`
+### 1. Login customer → simpan {{token}}
+
+- Folder: `Setup` · Endpoint: `POST /auth/login`
+- Status: **200 OK** · 302 ms · 257 B
+- Assertion: **2/2 PASS**
+- Yang dibuktikan: Token customer disimpan ke variabel `{{token}}`.
+
+![Login customer → simpan {{token}}](screenshots/00-login-customer.png)
 
 ```json
-{
-  "status": "success",
-  "message": "Registrasi berhasil",
-  "data": {
-    "access_token": "4|CdngID4sh47aaQXgvvfNZ9btGmYvd8WqUfHXTafU0f1098f9",
-    "token_type": "Bearer",
-    "user": {
-      "user_id": 8,
-      "name": "Uji Coba 212159",
-      "email": "uji212159@kantin.test",
-      "role": "customer",
-      "phone": null
-    }
-  }
-}
+{"status":"success","message":"Login berhasil","data":{"access_token":"1|rfGtuO…(dipotong)","token_type":"Bearer","user":{"user_id":2,"name":"Riska Dinar","email":"riska@kantin.test","role":"customer","phone":"081200000002"}}}
 ```
 
-### Login dan dapat token — POST `/auth/login`
+### 2. Login admin → simpan {{adminToken}}
+
+- Folder: `Setup` · Endpoint: `POST /auth/login`
+- Status: **200 OK** · 271 ms · 255 B
+- Assertion: **2/2 PASS**
+- Yang dibuktikan: Token admin disimpan untuk request ber-middleware admin.
+
+![Login admin → simpan {{adminToken}}](screenshots/00-login-admin.png)
 
 ```json
-{
-  "status": "success",
-  "message": "Login berhasil",
-  "data": {
-    "access_token": "5|c9y6K3LlcWY39C5fVCV8jzG118oSr72LVGlVItiBe00ee732",
-    "token_type": "Bearer",
-    "user": {
-      "user_id": 2,
-      "name": "Riska Dinar",
-      "email": "riska@kantin.test",
-      "role": "customer",
-      "phone": "081298765432"
-    }
-  }
-}
+{"status":"success","message":"Login berhasil","data":{"access_token":"2|uEiVux…(dipotong)","token_type":"Bearer","user":{"user_id":1,"name":"Admin Kantin","email":"admin@kantin.test","role":"admin","phone":"081200000001"}}}
 ```
 
-### Profil dari token — GET `/auth/me`
+### 3. Simpan product_id pertama
+
+- Folder: `Setup` · Endpoint: `GET /products`
+- Status: **200 OK** · 6 ms · 502 B
+- Assertion: **2/2 PASS**
+- Yang dibuktikan: Mengambil `product_id` asli dari database untuk test berikutnya.
+
+![Simpan product_id pertama](screenshots/00-product-id.png)
 
 ```json
-{
-  "status": "success",
-  "message": "Data pengguna berhasil diambil",
-  "data": {
-    "user_id": 2,
-    "name": "Riska Dinar",
-    "email": "riska@kantin.test",
-    "role": "customer",
-    "phone": "081298765432"
-  }
-}
+{"status":"success","message":"Produk berhasil diambil","data":[{"product_id":15,"category_id":3,"product_name":"Air Mineral Dingin","description":"Air Mineral Dingin siap disajikan di kantin kampus.","price":4000,"image_url":"\/images\/air-mineral-dingin.jpg","stock":60,"is_available":true,"category":{"category_id":3,"category_name":"Minuman Dingin","description":"Es teh, jus dan minuman kemasan"},"created_at":"2026
+... (dipotong)
 ```
 
-### Daftar produk + pagination meta — GET `/products?limit=3`
+### 4. Register user baru (201 + token)
+
+- Folder: `Auth` · Endpoint: `POST /auth/register`
+- Status: **201 Created** · 272 ms · 269 B
+- Assertion: **2/2 PASS**
+- Yang dibuktikan: User baru dibuat dan langsung menerima token.
+
+![Register user baru (201 + token)](screenshots/01-register-201.png)
 
 ```json
-{
-  "status": "success",
-  "message": "Produk berhasil diambil",
-  "data": [
-    {
-      "product_id": 15,
-      "category_id": 3,
-      "product_name": "Air Mineral Dingin",
-      "description": "Air Mineral Dingin siap disajikan di kantin kampus.",
-      "price": 4000,
-      "image_url": "/images/air-mineral-dingin.jpg",
-      "stock": 60,
-      "is_available": true,
-      "category": {
-        "category_id": 3,
-        "category_name": "Minuman Dingin",
-        "description": "Es teh, jus dan minuman kemasan"
-      },
-      "created_at": "2026-11-18T14:21:44+00:00"
-    },
-    {
-      "product_id": 3,
-      "category_id": 1,
-      "product_name": "Ayam Geprek Sambal Bawang",
-      "description": "Ayam Geprek Sambal Bawang siap disajikan di kantin kampus.",
-      "price": 16000,
-      "image_url": "/images/ayam-geprek-sambal-bawang.jpg",
-      "stock": 18,
-      "is_available": true,
-      "category": {
-        "category_id": 1,
-        "category_name": "Makanan Berat",
-        "description": "Nasi, mie, ayam dan lauk utama"
-      },
-      "created_at": "2026-11-18T14:21:44+00:00"
-    },
-    {
-      "product_id": 28,
-      "category_id": 6,
-      "product_name": "Brownies Kukus",
-
+{"status":"success","message":"Registrasi berhasil","data":{"access_token":"3|gApP0l…(dipotong)","token_type":"Bearer","user":{"user_id":7,"name":"Uji Postman","email":"uji.postman+1795018370@kantin.test","role":"customer","phone":null}}}
 ```
 
-### Detail produk — GET `/products/15`
+### 5. Register email duplikat (422)
+
+- Folder: `Auth` · Endpoint: `POST /auth/register`
+- Status: **422 Unprocessable Content** · 5 ms · 92 B
+- Assertion: **2/2 PASS**
+- Yang dibuktikan: Email sudah dipakai → `errors.email`.
+
+![Register email duplikat (422)](screenshots/02-register-422.png)
 
 ```json
-{
-  "status": "success",
-  "message": "Detail produk berhasil diambil",
-  "data": {
-    "product_id": 15,
-    "category_id": 3,
-    "product_name": "Air Mineral Dingin",
-    "description": "Air Mineral Dingin siap disajikan di kantin kampus.",
-    "price": 4000,
-    "image_url": "/images/air-mineral-dingin.jpg",
-    "stock": 60,
-    "is_available": true,
-    "category": {
-      "category_id": 3,
-      "category_name": "Minuman Dingin",
-      "description": "Es teh, jus dan minuman kemasan"
-    },
-    "created_at": "2026-11-18T14:21:44+00:00"
-  }
-}
+{"status":"error","message":"Data tidak valid","errors":{"email":["Email sudah digunakan"]}}
 ```
 
-### Buat pesanan valid — POST `/orders`
+### 6. Login password salah (401)
+
+- Folder: `Auth` · Endpoint: `POST /auth/login`
+- Status: **401 Unauthorized** · 270 ms · 68 B
+- Assertion: **2/2 PASS**
+- Yang dibuktikan: Password salah tidak menghasilkan token.
+
+![Login password salah (401)](screenshots/03-login-401.png)
 
 ```json
-{
-  "status": "success",
-  "message": "Pesanan berhasil dibuat",
-  "data": {
-    "order_id": 10,
-    "order_code": "KC-20261118-010",
-    "order_status": "pending",
-    "total_amount": 24000,
-    "notes": null,
-    "pickup_time": "2026-11-18T21:21:59+00:00",
-    "ordered_at": "2026-11-18T14:21:59+00:00",
-    "items": [
-      {
-        "order_item_id": 18,
-        "product_id": 15,
-        "product_name": "Air Mineral Dingin",
-        "unit_price": 4000,
-        "quantity": 2,
-        "subtotal": 8000
-      },
-      {
-        "order_item_id": 19,
-        "product_id": 3,
-        "product_name": "Ayam Geprek Sambal Bawang",
-        "unit_price": 16000,
-        "quantity": 1,
-        "subtotal": 16000
-      }
-    ]
-  }
-}
+{"status":"error","message":"Email atau password salah","errors":{}}
 ```
 
-### Daftar pesanan milik sendiri — GET `/orders`
+### 7. Me
+
+- Folder: `Auth` · Endpoint: `GET /auth/me`
+- Status: **200 OK** · 7 ms · 174 B
+- Assertion: **2/2 PASS**
+- Yang dibuktikan: Profil dibaca dari Bearer token.
+
+![Me](screenshots/04-me-200.png)
 
 ```json
-{
-  "status": "success",
-  "message": "Daftar pesanan berhasil diambil",
-  "data": [
-    {
-      "order_id": 10,
-      "order_code": "KC-20261118-010",
-      "order_status": "pending",
-      "total_amount": 24000,
-      "notes": null,
-      "pickup_time": "2026-11-18T21:21:59+00:00",
-      "ordered_at": "2026-11-18T14:21:59+00:00",
-      "items": [
-        {
-          "order_item_id": 18,
-          "product_id": 15,
-          "product_name": "Air Mineral Dingin",
-          "unit_price": 4000,
-          "quantity": 2,
-          "subtotal": 8000
-        },
-        {
-          "order_item_id": 19,
-          "product_id": 3,
-          "product_name": "Ayam Geprek Sambal Bawang",
-          "unit_price": 16000,
-          "quantity": 1,
-          "subtotal": 16000
-        }
-      ]
-    },
-    {
-      "order_id": 9,
-      "order_code": "KC-20261118-009",
-      "order_status": "processing",
-      "total_amount": 33000,
-      "notes": "Tanpa sambal",
-      "pickup_time": "2026-12-01T12:30:00+00:00",
-      "ordered_at": "2026-11-18T14:21:53+00:00",
-      "items": [
-        {
-          "order_item_id": 17,
-          "product_id": 31,
-          "product_name": "Nasi Goreng Spesial Kampus",
-    
+{"status":"success","message":"Data pengguna berhasil diambil","data":{"user_id":2,"name":"Riska Dinar","email":"riska@kantin.test","role":"customer","phone":"081200000002"}}
 ```
 
-### Validasi: items kosong — POST `/orders`
+### 8. Get products + pagination
+
+- Folder: `Products` · Endpoint: `GET /products`
+- Status: **200 OK** · 5 ms · 1981 B
+- Assertion: **2/2 PASS**
+- Yang dibuktikan: Filter + `meta` pagination (page/per_page/total/last_page).
+
+![Get products + pagination](screenshots/05-products-200.png)
 
 ```json
-{
-  "status": "error",
-  "message": "Data tidak valid",
-  "errors": {
-    "items": [
-      "Minimal satu produk harus dipilih"
-    ]
-  }
-}
+{"status":"success","message":"Produk berhasil diambil","data":[{"product_id":15,"category_id":3,"product_name":"Air Mineral Dingin","description":"Air Mineral Dingin siap disajikan di kantin kampus.","price":4000,"image_url":"\/images\/air-mineral-dingin.jpg","stock":60,"is_available":true,"category":{"category_id":3,"category_name":"Minuman Dingin","description":"Es teh, jus dan minuman kemasan"},"created_at":"2026
+... (dipotong)
 ```
 
-### Tanpa token — GET `/orders`
+### 9. Product tidak ada (404)
+
+- Folder: `Products` · Endpoint: `GET /products/{id}`
+- Status: **404 Not Found** · 4 ms · 63 B
+- Assertion: **2/2 PASS**
+- Yang dibuktikan: ID tidak ada → format error tetap konsisten.
+
+![Product tidak ada (404)](screenshots/06-product-404.png)
 
 ```json
-{
-  "status": "error",
-  "message": "Unauthenticated, token tidak valid atau tidak dikirim",
-  "errors": {}
-}
+{"status":"error","message":"Data tidak ditemukan","errors":{}}
 ```
 
-### Logout — POST `/auth/logout`
+### 10. Create product (admin, 201)
+
+- Folder: `Products` · Endpoint: `POST /products`
+- Status: **201 Created** · 9 ms · 428 B
+- Assertion: **2/2 PASS**
+- Yang dibuktikan: Admin menambah produk; validasi lewat Form Request.
+
+![Create product (admin, 201)](screenshots/07-product-201.png)
 
 ```json
-{
-  "status": "success",
-  "message": "Logout berhasil",
-  "data": null
-}
+{"status":"success","message":"Produk berhasil dibuat","data":{"product_id":31,"category_id":1,"product_name":"Nasi Goreng Spesial Kampus","description":"Nasi goreng dengan telur dan sayuran","price":15000,"image_url":"\/images\/nasi-goreng.jpg","stock":20,"is_available":false,"category":{"category_id":1,"category_name":"Makanan Berat","description":"Nasi, mie, ayam dan lauk utama"},"created_at":"2026-11-18T16:12:50+
+... (dipotong)
 ```
 
-### Produk tidak ada — GET `/products/999999`
+### 11. Create order (201)
+
+- Folder: `Orders` · Endpoint: `POST /orders`
+- Status: **201 Created** · 8 ms · 401 B
+- Assertion: **2/2 PASS**
+- Yang dibuktikan: Total dihitung server, stok dikurangi.
+
+![Create order (201)](screenshots/08-order-201.png)
 
 ```json
-{
-  "status": "error",
-  "message": "Data tidak ditemukan",
-  "errors": {}
-}
+{"status":"success","message":"Pesanan berhasil dibuat","data":{"order_id":9,"order_code":"KC-20261118-009","order_status":"pending","total_amount":33000,"notes":"Tanpa sambal","pickup_time":"2026-12-01T12:30:00+00:00","ordered_at":"2026-11-18T16:12:51+00:00","items":[{"order_item_id":17,"product_id":31,"product_name":"Nasi Goreng Spesial Kampus","unit_price":16500,"quantity":2,"subtotal":33000}]}}
 ```
 
-### Login admin — POST `/auth/login`
+### 12. Create order items kosong (422)
+
+- Folder: `Orders` · Endpoint: `POST /orders`
+- Status: **422 Unprocessable Content** · 5 ms · 104 B
+- Assertion: **2/2 PASS**
+- Yang dibuktikan: `items: []` → `errors.items`.
+
+![Create order items kosong (422)](screenshots/09-order-422.png)
 
 ```json
-{
-  "status": "success",
-  "message": "Login berhasil",
-  "data": {
-    "access_token": "6|1IeUBRNDl1cw5mbgyw9zuaVir8SVJm0ymUHEvb4W5332d270",
-    "token_type": "Bearer",
-    "user": {
-      "user_id": 1,
-      "name": "Admin Kantin",
-      "email": "admin@kantin.test",
-      "role": "admin",
-      "phone": "081200000001"
-    }
-  }
-}
+{"status":"error","message":"Data tidak valid","errors":{"items":["Minimal satu produk harus dipilih"]}}
 ```
 
-### Customer buat produk — POST `/products`
+### 13. Tanpa token (401)
+
+- Folder: `Orders` · Endpoint: `GET /orders`
+- Status: **401 Unauthorized** · 4 ms · 96 B
+- Assertion: **2/2 PASS**
+- Yang dibuktikan: Endpoint terlindungi menolak request tanpa token.
+
+![Tanpa token (401)](screenshots/10-no-token-401.png)
 
 ```json
-{
-  "status": "error",
-  "message": "Akses hanya untuk admin",
-  "errors": {}
-}
+{"status":"error","message":"Unauthenticated, token tidak valid atau tidak dikirim","errors":{}}
 ```
 
-### Admin buat produk — POST `/products`
+### 14. Customer create product (403)
+
+- Folder: `Products` · Endpoint: `POST /products`
+- Status: **403 Forbidden** · 4 ms · 66 B
+- Assertion: **2/2 PASS**
+- Yang dibuktikan: Middleware admin menolak role customer.
+
+![Customer create product (403)](screenshots/11-customer-403.png)
 
 ```json
-{
-  "status": "success",
-  "message": "Produk berhasil dibuat",
-  "data": {
-    "product_id": 33,
-    "category_id": 1,
-    "product_name": "Menu Uji 212159",
-    "description": "Dibuat saat smoke test",
-    "price": 12500,
-    "image_url": "/images/uji.jpg",
-    "stock": 10,
-    "is_available": false,
-    "category": {
-      "category_id": 1,
-      "category_name": "Makanan Berat",
-      "description": "Nasi, mie, ayam dan lauk utama"
-    },
-    "created_at": "2026-11-18T14:22:00+00:00"
-  }
-}
+{"status":"error","message":"Akses hanya untuk admin","errors":{}}
 ```
 
-### Cari produk baru — GET `/products?search=Menu%20Uji%20212159`
+### 15. Create product invalid (422)
+
+- Folder: `Products` · Endpoint: `POST /products`
+- Status: **422 Unprocessable Content** · 5 ms · 264 B
+- Assertion: **2/2 PASS**
+- Yang dibuktikan: `category_id` tidak ada + harga negatif → 422.
+
+![Create product invalid (422)](screenshots/12-product-invalid-422.png)
 
 ```json
-{
-  "status": "success",
-  "message": "Produk berhasil diambil",
-  "data": [
-    {
-      "product_id": 33,
-      "category_id": 1,
-      "product_name": "Menu Uji 212159",
-      "description": "Dibuat saat smoke test",
-      "price": 12500,
-      "image_url": "/images/uji.jpg",
-      "stock": 10,
-      "is_available": true,
-      "category": {
-        "category_id": 1,
-        "category_name": "Makanan Berat",
-        "description": "Nasi, mie, ayam dan lauk utama"
-      },
-      "created_at": "2026-11-18T14:22:00+00:00"
-    }
-  ],
-  "meta": {
-    "page": 1,
-    "per_page": 10,
-    "total": 1,
-    "last_page": 1
-  }
-}
+{"status":"error","message":"Data tidak valid","errors":{"category_id":["The selected category id is invalid."],"product_name":["The product name field is required."],"price":["The price field must be at least 0."],"stock":["The stock field must be at least 0."]}}
 ```
 
-### Tambah item ke keranjang — POST `/cart/items`
+### 16. Logout
+
+- Folder: `Auth` · Endpoint: `POST /auth/logout`
+- Status: **200 OK** · 5 ms · 60 B
+- Assertion: **2/2 PASS**
+- Yang dibuktikan: Token dihapus di server.
+
+![Logout](screenshots/13-logout-200.png)
 
 ```json
-{
-  "status": "success",
-  "message": "Item masuk keranjang",
-  "data": {
-    "cart_id": 1,
-    "items": [
-      {
-        "cart_item_id": 2,
-        "product_id": 33,
-        "product_name": "Menu Uji 212159",
-        "price": 12500,
-        "quantity": 2,
-        "subtotal": 25000
-      }
-    ],
-    "total_items": 2,
-    "total_amount": 25000
-  }
-}
+{"status":"success","message":"Logout berhasil","data":null}
 ```
 
-### Lihat keranjang — GET `/cart`
+## Catatan
 
-```json
-{
-  "status": "success",
-  "message": "Keranjang berhasil diambil",
-  "data": {
-    "cart_id": 1,
-    "items": [
-      {
-        "cart_item_id": 2,
-        "product_id": 33,
-        "product_name": "Menu Uji 212159",
-        "price": 12500,
-        "quantity": 2,
-        "subtotal": 25000
-      }
-    ],
-    "total_items": 2,
-    "total_amount": 25000
-  }
-}
-```
-
-### Buat pembayaran — POST `/orders/10/payments`
-
-```json
-{
-  "status": "success",
-  "message": "Pembayaran berhasil dibuat",
-  "data": {
-    "payment_id": 10,
-    "order_id": 10,
-    "payment_method": "qris",
-    "payment_status": "pending",
-    "transaction_reference": "TRX-KC-20261118-010",
-    "paid_at": null
-  }
-}
-```
-
-### Detail pembayaran — GET `/orders/10/payment`
-
-```json
-{
-  "status": "success",
-  "message": "Detail pembayaran berhasil diambil",
-  "data": {
-    "payment_id": 10,
-    "order_id": 10,
-    "payment_method": "qris",
-    "payment_status": "pending",
-    "transaction_reference": "TRX-KC-20261118-010",
-    "paid_at": null
-  }
-}
-```
-
-### Admin ubah status — PATCH `/orders/10/status`
-
-```json
-{
-  "status": "success",
-  "message": "Status pesanan berhasil diperbarui",
-  "data": {
-    "order_id": 10,
-    "order_code": "KC-20261118-010",
-    "order_status": "processing",
-    "total_amount": 24000,
-    "notes": null,
-    "pickup_time": "2026-11-18T21:21:59+00:00",
-    "ordered_at": "2026-11-18T14:21:59+00:00",
-    "items": [
-      {
-        "order_item_id": 18,
-        "product_id": 15,
-        "product_name": "Air Mineral Dingin",
-        "unit_price": 4000,
-        "quantity": 2,
-        "subtotal": 8000
-      },
-      {
-        "order_item_id": 19,
-        "product_id": 3,
-        "product_name": "Ayam Geprek Sambal Bawang",
-        "unit_price": 16000,
-        "quantity": 1,
-        "subtotal": 16000
-      }
-    ]
-  }
-}
-```
-
-### Riwayat status — GET `/orders/10/status-history`
-
-```json
-{
-  "status": "success",
-  "message": "Riwayat status berhasil diambil",
-  "data": [
-    {
-      "status": "processing",
-      "note": "Diproses dapur",
-      "created_at": "2026-11-18T14:22:00+00:00"
-    },
-    {
-      "status": "pending",
-      "note": "Pesanan dibuat",
-      "created_at": "2026-11-18T14:21:59+00:00"
-    }
-  ]
-}
-```
-
-### Status tidak valid — PATCH `/orders/10/status`
-
-```json
-{
-  "status": "error",
-  "message": "Data tidak valid",
-  "errors": {
-    "status": [
-      "Status tidak tersedia"
-    ]
-  }
-}
-```
-
-### Admin lihat semua pesanan — GET `/admin/orders`
-
-```json
-{
-  "status": "success",
-  "message": "Semua pesanan berhasil diambil",
-  "data": [
-    {
-      "order_id": 10,
-      "order_code": "KC-20261118-010",
-      "order_status": "processing",
-      "total_amount": 24000,
-      "notes": null,
-      "pickup_time": "2026-11-18T21:21:59+00:00",
-      "ordered_at": "2026-11-18T14:21:59+00:00",
-      "customer": {
-        "user_id": 2,
-        "name": "Riska Dinar",
-        "email": "riska@kantin.test",
-        "role": "customer",
-        "phone": "081298765432"
-      },
-      "items": [
-        {
-          "order_item_id": 18,
-          "product_id": 15,
-          "product_name": "Air Mineral Dingin",
-          "unit_price": 4000,
-          "quantity": 2,
-          "subtotal": 8000
-        },
-        {
-          "order_item_id": 19,
-          "product_id": 3,
-          "product_name": "Ayam Geprek Sambal Bawang",
-          "unit_price": 16000,
-          "quantity": 1,
-          "subtotal": 16000
-        }
-      ]
-    },
-    {
-      "order_id": 9,
-      "order_code": "KC-20261118-009",
-      "order_status": "processing",
-      "total_amount": 33000,
-      "notes": "Tanpa sambal",
-      "pickup_time": "2026-12-01T12:30:00+00:00",
-      "ordere
-```
-
-### Ringkasan dashboard — GET `/admin/summary`
-
-```json
-{
-  "status": "success",
-  "message": "Ringkasan dashboard berhasil diambil",
-  "data": {
-    "total_products": 32,
-    "available_products": 32,
-    "total_customers": 6,
-    "total_orders": 10,
-    "orders_by_status": {
-      "cancelled": 1,
-      "completed": 2,
-      "pending": 1,
-      "processing": 4,
-      "ready": 2
-    },
-    "revenue": 78000
-  }
-}
-```
-
-### Daftar kategori — GET `/categories`
-
-```json
-{
-  "status": "success",
-  "message": "Kategori berhasil diambil",
-  "data": [
-    {
-      "category_id": 6,
-      "category_name": "Dessert",
-      "description": "Puding, es krim dan kue",
-      "products_count": 5
-    },
-    {
-      "category_id": 1,
-      "category_name": "Makanan Berat",
-      "description": "Nasi, mie, ayam dan lauk utama",
-      "products_count": 7
-    },
-    {
-      "category_id": 2,
-      "category_name": "Makanan Ringan",
-      "description": "Gorengan, roti dan camilan",
-      "products_count": 5
-    },
-    {
-      "category_id": 3,
-      "category_name": "Minuman Dingin",
-      "description": "Es teh, jus dan minuman kemasan",
-      "products_count": 5
-    },
-    {
-      "category_id": 4,
-      "category_name": "Minuman Hangat",
-      "description": "Kopi, teh dan wedang",
-      "products_count": 5
-    },
-    {
-      "category_id": 5,
-      "category_name": "Paket Hemat",
-      "description": "Kombinasi makanan dan minuman",
-      "products_count": 5
-    },
-    {
-      "category_id": 7,
-      "category_name": "Snack Kering",
-      "description": "Keripik, kacang, dan kerupuk",
-      "products_count": 0
-    }
-  ]
-}
-```
+- Jalankan `php artisan migrate:fresh --seed` sebelum run ulang, supaya hasil identik.
+- Test register memakai `{{$timestamp}}` di email, jadi aman diulang tanpa bentrok.
+- Endpoint aktif: 26 (`php artisan route:list --path=api/v1`).
