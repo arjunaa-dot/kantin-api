@@ -30,6 +30,13 @@ npx newman run docs/postman/KANTINKU_API_v1.postman_collection.json
 | 7. Payments | 5 | ya |
 | 8. Logout | 1 | ya |
 
+## Kenapa 47 request padahal endpoint cuma 26
+
+26 itu jumlah route aktif. Collection menjalankan tiap endpoint **lebih dari sekali**
+untuk skenario berbeda — misalnya `POST /auth/login` dipanggil 3x (customer, admin,
+password salah), `POST /products` 4x (sukses, 422, 403, sekali pakai untuk DELETE),
+`POST /orders` 2x (201 dan 422). Totalnya 47 request.
+
 ## Kenapa ini bukan sekadar "happy path"
 
 Yang diuji bukan cuma sukses, tapi juga jalur gagal yang diminta rubrik:
