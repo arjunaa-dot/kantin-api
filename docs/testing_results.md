@@ -1,7 +1,7 @@
 # Testing Results — KANTINKU API
 
-- Base URL: `http://127.0.0.1:8010/api/v1`
-- Waktu eksekusi: 2026-11-18T21:15:42
+- Base URL: `http://127.0.0.1:8000/api/v1`
+- Waktu eksekusi: 2026-11-18T21:22:00
 - Hasil: **25/25 test lulus**
 - Dijalankan dari `docs/postman/run_tests.py` (isi tabel = response asli, bukan tulisan tangan)
 
@@ -21,14 +21,14 @@
 | 12 | Login admin | `POST /auth/login` | 200 | 200 | PASS |
 | 13 | Customer buat produk | `POST /products` | 403 | 403 | PASS |
 | 14 | Admin buat produk | `POST /products` | 201 | 201 | PASS |
-| 15 | Cari produk baru | `GET /products?search=Menu%20Uji%20211540` | 200 | 200 | PASS |
+| 15 | Cari produk baru | `GET /products?search=Menu%20Uji%20212159` | 200 | 200 | PASS |
 | 16 | Tambah item ke keranjang | `POST /cart/items` | 201 | 201 | PASS |
 | 17 | Lihat keranjang | `GET /cart` | 200 | 200 | PASS |
-| 18 | Buat pembayaran | `POST /orders/9/payments` | 201 | 201 | PASS |
-| 19 | Detail pembayaran | `GET /orders/9/payment` | 200 | 200 | PASS |
-| 20 | Admin ubah status | `PATCH /orders/9/status` | 200 | 200 | PASS |
-| 21 | Riwayat status | `GET /orders/9/status-history` | 200 | 200 | PASS |
-| 22 | Status tidak valid | `PATCH /orders/9/status` | 422 | 422 | PASS |
+| 18 | Buat pembayaran | `POST /orders/10/payments` | 201 | 201 | PASS |
+| 19 | Detail pembayaran | `GET /orders/10/payment` | 200 | 200 | PASS |
+| 20 | Admin ubah status | `PATCH /orders/10/status` | 200 | 200 | PASS |
+| 21 | Riwayat status | `GET /orders/10/status-history` | 200 | 200 | PASS |
+| 22 | Status tidak valid | `PATCH /orders/10/status` | 422 | 422 | PASS |
 | 23 | Admin lihat semua pesanan | `GET /admin/orders` | 200 | 200 | PASS |
 | 24 | Ringkasan dashboard | `GET /admin/summary` | 200 | 200 | PASS |
 | 25 | Daftar kategori | `GET /categories` | 200 | 200 | PASS |
@@ -42,12 +42,12 @@
   "status": "success",
   "message": "Registrasi berhasil",
   "data": {
-    "access_token": "7|x9be2k25L5lnS5H1hphtVgI9a72SS2uLHKhs1LWu9023be74",
+    "access_token": "4|CdngID4sh47aaQXgvvfNZ9btGmYvd8WqUfHXTafU0f1098f9",
     "token_type": "Bearer",
     "user": {
-      "user_id": 9,
-      "name": "Uji Coba 211540",
-      "email": "uji211540@kantin.test",
+      "user_id": 8,
+      "name": "Uji Coba 212159",
+      "email": "uji212159@kantin.test",
       "role": "customer",
       "phone": null
     }
@@ -62,14 +62,14 @@
   "status": "success",
   "message": "Login berhasil",
   "data": {
-    "access_token": "8|8LXzaiQPSILKezVSixgIbgMRzSuPAxsKFCk1nHUCeb751527",
+    "access_token": "5|c9y6K3LlcWY39C5fVCV8jzG118oSr72LVGlVItiBe00ee732",
     "token_type": "Bearer",
     "user": {
       "user_id": 2,
       "name": "Riska Dinar",
       "email": "riska@kantin.test",
       "role": "customer",
-      "phone": "081200000002"
+      "phone": "081298765432"
     }
   }
 }
@@ -86,7 +86,7 @@
     "name": "Riska Dinar",
     "email": "riska@kantin.test",
     "role": "customer",
-    "phone": "081200000002"
+    "phone": "081298765432"
   }
 }
 ```
@@ -112,7 +112,7 @@
         "category_name": "Minuman Dingin",
         "description": "Es teh, jus dan minuman kemasan"
       },
-      "created_at": "2026-11-18T14:14:06+00:00"
+      "created_at": "2026-11-18T14:21:44+00:00"
     },
     {
       "product_id": 3,
@@ -128,7 +128,7 @@
         "category_name": "Makanan Berat",
         "description": "Nasi, mie, ayam dan lauk utama"
       },
-      "created_at": "2026-11-18T14:14:06+00:00"
+      "created_at": "2026-11-18T14:21:44+00:00"
     },
     {
       "product_id": 28,
@@ -157,7 +157,7 @@
       "category_name": "Minuman Dingin",
       "description": "Es teh, jus dan minuman kemasan"
     },
-    "created_at": "2026-11-18T14:14:06+00:00"
+    "created_at": "2026-11-18T14:21:44+00:00"
   }
 }
 ```
@@ -169,16 +169,16 @@
   "status": "success",
   "message": "Pesanan berhasil dibuat",
   "data": {
-    "order_id": 9,
-    "order_code": "KC-20261118-009",
+    "order_id": 10,
+    "order_code": "KC-20261118-010",
     "order_status": "pending",
     "total_amount": 24000,
     "notes": null,
-    "pickup_time": "2026-11-18T21:15:41+00:00",
-    "ordered_at": "2026-11-18T14:15:42+00:00",
+    "pickup_time": "2026-11-18T21:21:59+00:00",
+    "ordered_at": "2026-11-18T14:21:59+00:00",
     "items": [
       {
-        "order_item_id": 17,
+        "order_item_id": 18,
         "product_id": 15,
         "product_name": "Air Mineral Dingin",
         "unit_price": 4000,
@@ -186,7 +186,7 @@
         "subtotal": 8000
       },
       {
-        "order_item_id": 18,
+        "order_item_id": 19,
         "product_id": 3,
         "product_name": "Ayam Geprek Sambal Bawang",
         "unit_price": 16000,
@@ -206,16 +206,16 @@
   "message": "Daftar pesanan berhasil diambil",
   "data": [
     {
-      "order_id": 9,
-      "order_code": "KC-20261118-009",
+      "order_id": 10,
+      "order_code": "KC-20261118-010",
       "order_status": "pending",
       "total_amount": 24000,
       "notes": null,
-      "pickup_time": "2026-11-18T21:15:41+00:00",
-      "ordered_at": "2026-11-18T14:15:42+00:00",
+      "pickup_time": "2026-11-18T21:21:59+00:00",
+      "ordered_at": "2026-11-18T14:21:59+00:00",
       "items": [
         {
-          "order_item_id": 17,
+          "order_item_id": 18,
           "product_id": 15,
           "product_name": "Air Mineral Dingin",
           "unit_price": 4000,
@@ -223,7 +223,7 @@
           "subtotal": 8000
         },
         {
-          "order_item_id": 18,
+          "order_item_id": 19,
           "product_id": 3,
           "product_name": "Ayam Geprek Sambal Bawang",
           "unit_price": 16000,
@@ -233,19 +233,19 @@
       ]
     },
     {
-      "order_id": 1,
-      "order_code": "KC-20261118-001",
-      "order_status": "pending",
-      "total_amount": 28000,
-      "notes": null,
-      "pickup_time": "2026-11-18T15:00:00+00:00",
-      "ordered_at": "2026-11-18T13:14:09+00:00",
+      "order_id": 9,
+      "order_code": "KC-20261118-009",
+      "order_status": "processing",
+      "total_amount": 33000,
+      "notes": "Tanpa sambal",
+      "pickup_time": "2026-12-01T12:30:00+00:00",
+      "ordered_at": "2026-11-18T14:21:53+00:00",
       "items": [
         {
-          "order_item_id": 1,
-          "product_id": 1,
+          "order_item_id": 17,
+          "product_id": 31,
           "product_name": "Nasi Goreng Spesial Kampus",
-          "unit_pric
+    
 ```
 
 ### Validasi: items kosong — POST `/orders`
@@ -299,7 +299,7 @@
   "status": "success",
   "message": "Login berhasil",
   "data": {
-    "access_token": "9|YVEQQBTe9KiI9WK7tli2ajJSFohMu7ey1P5rFGux42eb0811",
+    "access_token": "6|1IeUBRNDl1cw5mbgyw9zuaVir8SVJm0ymUHEvb4W5332d270",
     "token_type": "Bearer",
     "user": {
       "user_id": 1,
@@ -316,34 +316,10 @@
 
 ```json
 {
+  "status": "error",
   "message": "Akses hanya untuk admin",
-  "exception": "Symfony\\Component\\HttpKernel\\Exception\\HttpException",
-  "file": "/Users/yogiprasetyasadewa/Desktop/KANTINKU/kantin-api/vendor/laravel/framework/src/Illuminate/Foundation/Application.php",
-  "line": 1440,
-  "trace": [
-    {
-      "file": "/Users/yogiprasetyasadewa/Desktop/KANTINKU/kantin-api/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php",
-      "line": 67,
-      "function": "abort",
-      "class": "Illuminate\\Foundation\\Application",
-      "type": "->"
-    },
-    {
-      "file": "/Users/yogiprasetyasadewa/Desktop/KANTINKU/kantin-api/app/Http/Middleware/EnsureUserIsAdmin.php",
-      "line": 14,
-      "function": "abort"
-    },
-    {
-      "file": "/Users/yogiprasetyasadewa/Desktop/KANTINKU/kantin-api/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php",
-      "line": 219,
-      "function": "handle",
-      "class": "App\\Http\\Middleware\\EnsureUserIsAdmin",
-      "type": "->"
-    },
-    {
-      "file": "/Users/yogiprasetyasadewa/Desktop/KANTINKU/kantin-api/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php",
-      "line": 50,
-      "function": "{closure:{closure:
+  "errors": {}
+}
 ```
 
 ### Admin buat produk — POST `/products`
@@ -353,9 +329,9 @@
   "status": "success",
   "message": "Produk berhasil dibuat",
   "data": {
-    "product_id": 31,
+    "product_id": 33,
     "category_id": 1,
-    "product_name": "Menu Uji 211540",
+    "product_name": "Menu Uji 212159",
     "description": "Dibuat saat smoke test",
     "price": 12500,
     "image_url": "/images/uji.jpg",
@@ -366,12 +342,12 @@
       "category_name": "Makanan Berat",
       "description": "Nasi, mie, ayam dan lauk utama"
     },
-    "created_at": "2026-11-18T14:15:42+00:00"
+    "created_at": "2026-11-18T14:22:00+00:00"
   }
 }
 ```
 
-### Cari produk baru — GET `/products?search=Menu%20Uji%20211540`
+### Cari produk baru — GET `/products?search=Menu%20Uji%20212159`
 
 ```json
 {
@@ -379,9 +355,9 @@
   "message": "Produk berhasil diambil",
   "data": [
     {
-      "product_id": 31,
+      "product_id": 33,
       "category_id": 1,
-      "product_name": "Menu Uji 211540",
+      "product_name": "Menu Uji 212159",
       "description": "Dibuat saat smoke test",
       "price": 12500,
       "image_url": "/images/uji.jpg",
@@ -392,7 +368,7 @@
         "category_name": "Makanan Berat",
         "description": "Nasi, mie, ayam dan lauk utama"
       },
-      "created_at": "2026-11-18T14:15:42+00:00"
+      "created_at": "2026-11-18T14:22:00+00:00"
     }
   ],
   "meta": {
@@ -414,9 +390,9 @@
     "cart_id": 1,
     "items": [
       {
-        "cart_item_id": 1,
-        "product_id": 31,
-        "product_name": "Menu Uji 211540",
+        "cart_item_id": 2,
+        "product_id": 33,
+        "product_name": "Menu Uji 212159",
         "price": 12500,
         "quantity": 2,
         "subtotal": 25000
@@ -438,9 +414,9 @@
     "cart_id": 1,
     "items": [
       {
-        "cart_item_id": 1,
-        "product_id": 31,
-        "product_name": "Menu Uji 211540",
+        "cart_item_id": 2,
+        "product_id": 33,
+        "product_name": "Menu Uji 212159",
         "price": 12500,
         "quantity": 2,
         "subtotal": 25000
@@ -452,57 +428,57 @@
 }
 ```
 
-### Buat pembayaran — POST `/orders/9/payments`
+### Buat pembayaran — POST `/orders/10/payments`
 
 ```json
 {
   "status": "success",
   "message": "Pembayaran berhasil dibuat",
   "data": {
-    "payment_id": 9,
-    "order_id": 9,
+    "payment_id": 10,
+    "order_id": 10,
     "payment_method": "qris",
     "payment_status": "pending",
-    "transaction_reference": "TRX-KC-20261118-009",
+    "transaction_reference": "TRX-KC-20261118-010",
     "paid_at": null
   }
 }
 ```
 
-### Detail pembayaran — GET `/orders/9/payment`
+### Detail pembayaran — GET `/orders/10/payment`
 
 ```json
 {
   "status": "success",
   "message": "Detail pembayaran berhasil diambil",
   "data": {
-    "payment_id": 9,
-    "order_id": 9,
+    "payment_id": 10,
+    "order_id": 10,
     "payment_method": "qris",
     "payment_status": "pending",
-    "transaction_reference": "TRX-KC-20261118-009",
+    "transaction_reference": "TRX-KC-20261118-010",
     "paid_at": null
   }
 }
 ```
 
-### Admin ubah status — PATCH `/orders/9/status`
+### Admin ubah status — PATCH `/orders/10/status`
 
 ```json
 {
   "status": "success",
   "message": "Status pesanan berhasil diperbarui",
   "data": {
-    "order_id": 9,
-    "order_code": "KC-20261118-009",
+    "order_id": 10,
+    "order_code": "KC-20261118-010",
     "order_status": "processing",
     "total_amount": 24000,
     "notes": null,
-    "pickup_time": "2026-11-18T21:15:41+00:00",
-    "ordered_at": "2026-11-18T14:15:42+00:00",
+    "pickup_time": "2026-11-18T21:21:59+00:00",
+    "ordered_at": "2026-11-18T14:21:59+00:00",
     "items": [
       {
-        "order_item_id": 17,
+        "order_item_id": 18,
         "product_id": 15,
         "product_name": "Air Mineral Dingin",
         "unit_price": 4000,
@@ -510,7 +486,7 @@
         "subtotal": 8000
       },
       {
-        "order_item_id": 18,
+        "order_item_id": 19,
         "product_id": 3,
         "product_name": "Ayam Geprek Sambal Bawang",
         "unit_price": 16000,
@@ -522,7 +498,7 @@
 }
 ```
 
-### Riwayat status — GET `/orders/9/status-history`
+### Riwayat status — GET `/orders/10/status-history`
 
 ```json
 {
@@ -530,20 +506,20 @@
   "message": "Riwayat status berhasil diambil",
   "data": [
     {
-      "status": "pending",
-      "note": "Pesanan dibuat",
-      "created_at": "2026-11-18T14:15:42+00:00"
-    },
-    {
       "status": "processing",
       "note": "Diproses dapur",
-      "created_at": "2026-11-18T14:15:42+00:00"
+      "created_at": "2026-11-18T14:22:00+00:00"
+    },
+    {
+      "status": "pending",
+      "note": "Pesanan dibuat",
+      "created_at": "2026-11-18T14:21:59+00:00"
     }
   ]
 }
 ```
 
-### Status tidak valid — PATCH `/orders/9/status`
+### Status tidak valid — PATCH `/orders/10/status`
 
 ```json
 {
@@ -565,23 +541,23 @@
   "message": "Semua pesanan berhasil diambil",
   "data": [
     {
-      "order_id": 9,
-      "order_code": "KC-20261118-009",
+      "order_id": 10,
+      "order_code": "KC-20261118-010",
       "order_status": "processing",
       "total_amount": 24000,
       "notes": null,
-      "pickup_time": "2026-11-18T21:15:41+00:00",
-      "ordered_at": "2026-11-18T14:15:42+00:00",
+      "pickup_time": "2026-11-18T21:21:59+00:00",
+      "ordered_at": "2026-11-18T14:21:59+00:00",
       "customer": {
         "user_id": 2,
         "name": "Riska Dinar",
         "email": "riska@kantin.test",
         "role": "customer",
-        "phone": "081200000002"
+        "phone": "081298765432"
       },
       "items": [
         {
-          "order_item_id": 17,
+          "order_item_id": 18,
           "product_id": 15,
           "product_name": "Air Mineral Dingin",
           "unit_price": 4000,
@@ -589,7 +565,7 @@
           "subtotal": 8000
         },
         {
-          "order_item_id": 18,
+          "order_item_id": 19,
           "product_id": 3,
           "product_name": "Ayam Geprek Sambal Bawang",
           "unit_price": 16000,
@@ -599,13 +575,13 @@
       ]
     },
     {
-      "order_id": 1,
-      "order_code": "KC-20261118-001",
-      "order_status": "pending",
-      "total_amount": 28000,
-      "notes": null,
-      "pickup_time": "2026-11-18T15:00:00+00:00",
-      "ordered_at": "2026-1
+      "order_id": 9,
+      "order_code": "KC-20261118-009",
+      "order_status": "processing",
+      "total_amount": 33000,
+      "notes": "Tanpa sambal",
+      "pickup_time": "2026-12-01T12:30:00+00:00",
+      "ordere
 ```
 
 ### Ringkasan dashboard — GET `/admin/summary`
@@ -615,15 +591,15 @@
   "status": "success",
   "message": "Ringkasan dashboard berhasil diambil",
   "data": {
-    "total_products": 31,
-    "available_products": 31,
-    "total_customers": 7,
-    "total_orders": 9,
+    "total_products": 32,
+    "available_products": 32,
+    "total_customers": 6,
+    "total_orders": 10,
     "orders_by_status": {
       "cancelled": 1,
       "completed": 2,
       "pending": 1,
-      "processing": 3,
+      "processing": 4,
       "ready": 2
     },
     "revenue": 78000
@@ -648,7 +624,7 @@
       "category_id": 1,
       "category_name": "Makanan Berat",
       "description": "Nasi, mie, ayam dan lauk utama",
-      "products_count": 6
+      "products_count": 7
     },
     {
       "category_id": 2,
@@ -673,6 +649,12 @@
       "category_name": "Paket Hemat",
       "description": "Kombinasi makanan dan minuman",
       "products_count": 5
+    },
+    {
+      "category_id": 7,
+      "category_name": "Snack Kering",
+      "description": "Keripik, kacang, dan kerupuk",
+      "products_count": 0
     }
   ]
 }

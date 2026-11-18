@@ -1,95 +1,29 @@
 {
   "info": {
-    "name": "KANTINKU API v1 — Tugas Pertemuan 9",
-    "description": "26 endpoint aktif backend Laravel + Sanctum. Jalankan Register/Login dulu supaya variabel {{token}} terisi otomatis.",
+    "name": "KANTINKU API v1 — Pertemuan 9 (runnable)",
+    "description": "26 endpoint Laravel + Sanctum. Jalankan folder 0 dulu (token & id tersimpan otomatis), lalu folder 1-8 berurutan. Bisa dijalankan tanpa klik: npx newman run <file ini>.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
       "value": "http://127.0.0.1:8000/api/v1"
-    }
-  ],
-  "auth": {
-    "type": "bearer",
-    "bearer": [
-      {
-        "key": "token",
-        "value": "{{token}}",
-        "type": "string"
-      }
-    ]
-  },
-  "event": [
+    },
     {
-      "listen": "prerequest",
-      "script": {
-        "type": "text/javascript",
-        "exec": [
-          ""
-        ]
-      }
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "adminToken",
+      "value": ""
     }
   ],
   "item": [
     {
-      "name": "1. Auth (publik + token)",
+      "name": "0. Setup (jalankan pertama)",
       "item": [
         {
-          "name": "Register (201 + token)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/auth/register",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "register"
-              ]
-            },
-            "description": "201 + access_token. Email duplikat -> 422 dengan pesan 'Email sudah digunakan'.",
-            "auth": {
-              "type": "noauth"
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Riska Dinar\",\n  \"email\": \"riska.baru@kantin.test\",\n  \"password\": \"password123\",\n  \"phone\": \"081234567890\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('ada access_token', () => pm.expect(pm.response.json().data.access_token).to.be.a('string'));",
-                  "pm.collectionVariables.set('token', pm.response.json().data.access_token);",
-                  "console.log('token tersimpan otomatis');"
-                ]
-              }
-            }
-          ],
-          "response": []
-        },
-        {
-          "name": "Login (200 + token)",
+          "name": "Login customer → simpan {{token}}",
           "request": {
             "method": "POST",
             "header": [
@@ -112,7 +46,7 @@
                 "login"
               ]
             },
-            "description": "Password salah -> 401 'Email atau password salah'.",
+            "description": "Token customer untuk semua request bertanda bearer.",
             "auth": {
               "type": "noauth"
             },
@@ -132,14 +66,267 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('ada access_token', () => pm.expect(pm.response.json().data.access_token).to.be.a('string'));",
-                  "pm.collectionVariables.set('token', pm.response.json().data.access_token);",
-                  "console.log('token tersimpan otomatis');"
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();",
+                  "pm.collectionVariables.set('token', pm.response.json().data.access_token);"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
+        },
+        {
+          "name": "Login admin → simpan {{adminToken}}",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@kantin.test\",\n  \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();",
+                  "pm.collectionVariables.set('adminToken', pm.response.json().data.access_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Simpan product_id pertama",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();",
+                  "pm.collectionVariables.set('productId', pm.response.json().data[0].product_id);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "Register user baru (201 + token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "201 + access_token. Kirim email yang sama dua kali → 422 'Email sudah digunakan'.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Uji Postman\",\n  \"email\": \"uji.postman+{{$timestamp}}@kantin.test\",\n  \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register email duplikat (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Duplikat\",\n  \"email\": \"riska@kantin.test\",\n  \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login password salah (401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"riska@kantin.test\",\n  \"password\": \"salahbanget\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Me",
@@ -161,7 +348,7 @@
                 "me"
               ]
             },
-            "description": "200 data user dari token.",
+            "description": "",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -179,57 +366,12 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
                 ]
               }
             }
-          ],
-          "response": []
-        },
-        {
-          "name": "Logout",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/auth/logout",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "logout"
-              ]
-            },
-            "description": "200, token dihapus.",
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
-                ]
-              }
-            }
-          ],
-          "response": []
+          ]
         }
       ]
     },
@@ -274,15 +416,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
         },
         {
-          "name": "Update current user (PATCH)",
+          "name": "Update current user",
           "request": {
             "method": "PATCH",
             "header": [
@@ -318,7 +460,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Riska Dinar\",\n  \"phone\": \"081298765432\"\n}",
+              "raw": "{\n  \"phone\": \"081298765432\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -332,12 +474,12 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
         }
       ]
     },
@@ -374,15 +516,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
         },
         {
-          "name": "Get category detail (publik)",
+          "name": "Get category detail",
           "request": {
             "method": "GET",
             "header": [
@@ -412,15 +554,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
         },
         {
-          "name": "Create category (admin)",
+          "name": "Create category (admin, 201)",
           "request": {
             "method": "POST",
             "header": [
@@ -448,7 +590,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
+                  "value": "{{adminToken}}",
                   "type": "string"
                 }
               ]
@@ -469,12 +611,70 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();",
+                  "pm.collectionVariables.set('categoryId', pm.response.json().data.category_id);"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
+        },
+        {
+          "name": "Create category duplikat (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categories"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Snack Kering\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Update category (admin)",
@@ -491,13 +691,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/categories/1",
+              "raw": "{{baseUrl}}/categories/{{categoryId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "categories",
-                "1"
+                "{{categoryId}}"
               ]
             },
             "description": "",
@@ -506,14 +706,14 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
+                  "value": "{{adminToken}}",
                   "type": "string"
                 }
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"description\": \"Nasi, mie, ayam dan lauk utama\"\n}",
+              "raw": "{\n  \"description\": \"Keripik, kacang, dan kerupuk\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -527,57 +727,12 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
                 ]
               }
             }
-          ],
-          "response": []
-        },
-        {
-          "name": "Delete category (admin)",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/categories/7",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "categories",
-                "7"
-              ]
-            },
-            "description": "",
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
-                ]
-              }
-            }
-          ],
-          "response": []
+          ]
         }
       ]
     },
@@ -585,7 +740,7 @@
       "name": "4. Products",
       "item": [
         {
-          "name": "Get products (filter + pagination)",
+          "name": "Get products + pagination",
           "request": {
             "method": "GET",
             "header": [
@@ -609,7 +764,7 @@
                 },
                 {
                   "key": "limit",
-                  "value": "10"
+                  "value": "5"
                 }
               ]
             },
@@ -624,15 +779,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
         },
         {
-          "name": "Get products — filter kategori & search",
+          "name": "Filter kategori & search",
           "request": {
             "method": "GET",
             "header": [
@@ -671,15 +826,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
         },
         {
-          "name": "Get product detail (publik)",
+          "name": "Get product detail",
           "request": {
             "method": "GET",
             "header": [
@@ -689,13 +844,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/products/1",
+              "raw": "{{baseUrl}}/products/{{productId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "products",
-                "1"
+                "{{productId}}"
               ]
             },
             "description": "",
@@ -709,175 +864,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
         },
         {
-          "name": "Create product (admin, 201)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/products",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "products"
-              ]
-            },
-            "description": "422 kalau category_id tidak ada / price negatif / product_name kosong.",
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"category_id\": 1,\n  \"product_name\": \"Nasi Goreng Spesial Kampus\",\n  \"description\": \"Nasi goreng dengan telur dan sayuran\",\n  \"price\": 15000,\n  \"image_url\": \"/images/nasi-goreng.jpg\",\n  \"stock\": 20\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
-                ]
-              }
-            }
-          ],
-          "response": []
-        },
-        {
-          "name": "Update product (admin)",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/products/1",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "products",
-                "1"
-              ]
-            },
-            "description": "",
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"price\": 16000,\n  \"stock\": 18\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
-                ]
-              }
-            }
-          ],
-          "response": []
-        },
-        {
-          "name": "Delete product (admin)",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/products/26",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "products",
-                "26"
-              ]
-            },
-            "description": "",
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
-                ]
-              }
-            }
-          ],
-          "response": []
-        },
-        {
-          "name": "Product not found (404)",
+          "name": "Product tidak ada (404)",
           "request": {
             "method": "GET",
             "header": [
@@ -907,12 +902,345 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
+        },
+        {
+          "name": "Create product (admin, 201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category_id\": 1,\n  \"product_name\": \"Nasi Goreng Spesial Kampus\",\n  \"description\": \"Nasi goreng dengan telur dan sayuran\",\n  \"price\": 15000,\n  \"image_url\": \"/images/nasi-goreng.jpg\",\n  \"stock\": 20\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();",
+                  "pm.collectionVariables.set('newProductId', pm.response.json().data.product_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create product invalid (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category_id\": 9999,\n  \"product_name\": \"\",\n  \"price\": -1,\n  \"stock\": -5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Customer create product (403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category_id\": 1,\n  \"product_name\": \"Ngasal\",\n  \"price\": 1000,\n  \"stock\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update product (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{newProductId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{newProductId}}"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 16500,\n  \"stock\": 18\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create product sekali pakai (untuk DELETE)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category_id\": 1,\n  \"product_name\": \"Produk Hapus {{$timestamp}}\",\n  \"price\": 5000,\n  \"stock\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();",
+                  "pm.collectionVariables.set('delProductId', pm.response.json().data.product_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete product (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{delProductId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{delProductId}}"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -956,15 +1284,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
         },
         {
-          "name": "Add item to cart",
+          "name": "Add item (201)",
           "request": {
             "method": "POST",
             "header": [
@@ -1000,7 +1328,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"product_id\": 1,\n  \"quantity\": 2\n}",
+              "raw": "{\n  \"product_id\": \"{{newProductId}}\",\n  \"quantity\": 2\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1014,15 +1342,16 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();",
+                  "pm.collectionVariables.set('cartItemId', pm.response.json().data.items[0].cart_item_id);"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
         },
         {
-          "name": "Update cart item quantity",
+          "name": "Update qty",
           "request": {
             "method": "PATCH",
             "header": [
@@ -1036,14 +1365,14 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/cart/items/1",
+              "raw": "{{baseUrl}}/cart/items/{{cartItemId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "cart",
                 "items",
-                "1"
+                "{{cartItemId}}"
               ]
             },
             "description": "",
@@ -1073,15 +1402,74 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
         },
         {
-          "name": "Remove cart item",
+          "name": "Update qty tidak valid (422)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cart/items/{{cartItemId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cart",
+                "items",
+                "{{cartItemId}}"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Remove item",
           "request": {
             "method": "DELETE",
             "header": [
@@ -1091,14 +1479,14 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/cart/items/1",
+              "raw": "{{baseUrl}}/cart/items/{{cartItemId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "cart",
                 "items",
-                "1"
+                "{{cartItemId}}"
               ]
             },
             "description": "",
@@ -1119,12 +1507,58 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
+        },
+        {
+          "name": "Remove item lagi (404)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cart/items/{{cartItemId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cart",
+                "items",
+                "{{cartItemId}}"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -1154,7 +1588,7 @@
                 "orders"
               ]
             },
-            "description": "422 kalau items kosong / stok kurang. 404 kalau product_id tidak ada.",
+            "description": "Total dihitung server, stok produk berkurang 2.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1167,7 +1601,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"items\": [\n    {\n      \"product_id\": 1,\n      \"quantity\": 2\n    },\n    {\n      \"product_id\": 2,\n      \"quantity\": 1\n    }\n  ],\n  \"pickup_time\": \"2026-11-20T12:30:00\",\n  \"notes\": \"Tanpa sambal\"\n}",
+              "raw": "{\n  \"items\": [\n    {\n      \"product_id\": \"{{newProductId}}\",\n      \"quantity\": 2\n    }\n  ],\n  \"pickup_time\": \"2026-12-01T12:30:00\",\n  \"notes\": \"Tanpa sambal\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1181,15 +1615,16 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();",
+                  "pm.collectionVariables.set('orderId', pm.response.json().data.order_id);"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
         },
         {
-          "name": "Create order — invalid (422)",
+          "name": "Create order items kosong (422)",
           "request": {
             "method": "POST",
             "header": [
@@ -1211,7 +1646,7 @@
                 "orders"
               ]
             },
-            "description": "Membuktikan validasi Form Request jalan.",
+            "description": "",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1238,12 +1673,12 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
         },
         {
           "name": "Get my orders",
@@ -1282,12 +1717,12 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
         },
         {
           "name": "Get order detail",
@@ -1300,13 +1735,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/orders/1",
+              "raw": "{{baseUrl}}/orders/{{orderId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "orders",
-                "1"
+                "{{orderId}}"
               ]
             },
             "description": "",
@@ -1327,60 +1762,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
         },
         {
-          "name": "Cancel order",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/orders/1",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "orders",
-                "1"
-              ]
-            },
-            "description": "",
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
-                ]
-              }
-            }
-          ],
-          "response": []
-        },
-        {
-          "name": "Get order status history",
+          "name": "Status history",
           "request": {
             "method": "GET",
             "header": [
@@ -1390,13 +1780,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/orders/1/status-history",
+              "raw": "{{baseUrl}}/orders/{{orderId}}/status-history",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "orders",
-                "1",
+                "{{orderId}}",
                 "status-history"
               ]
             },
@@ -1418,15 +1808,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
         },
         {
-          "name": "Update order status (admin)",
+          "name": "Admin ubah status",
           "request": {
             "method": "PATCH",
             "header": [
@@ -1440,13 +1830,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/orders/1/status",
+              "raw": "{{baseUrl}}/orders/{{orderId}}/status",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "orders",
-                "1",
+                "{{orderId}}",
                 "status"
               ]
             },
@@ -1456,14 +1846,14 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
+                  "value": "{{adminToken}}",
                   "type": "string"
                 }
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"ready\",\n  \"note\": \"Pesanan siap diambil\"\n}",
+              "raw": "{\n  \"status\": \"processing\",\n  \"note\": \"Diproses dapur\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1477,15 +1867,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
         },
         {
-          "name": "Update status — invalid (422)",
+          "name": "Status tidak valid (422)",
           "request": {
             "method": "PATCH",
             "header": [
@@ -1499,13 +1889,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/orders/1/status",
+              "raw": "{{baseUrl}}/orders/{{orderId}}/status",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "orders",
-                "1",
+                "{{orderId}}",
                 "status"
               ]
             },
@@ -1515,7 +1905,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
+                  "value": "{{adminToken}}",
                   "type": "string"
                 }
               ]
@@ -1536,15 +1926,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
         },
         {
-          "name": "Admin: all orders",
+          "name": "Admin lihat semua orders",
           "request": {
             "method": "GET",
             "header": [
@@ -1561,12 +1951,6 @@
               "path": [
                 "admin",
                 "orders"
-              ],
-              "query": [
-                {
-                  "key": "status",
-                  "value": "pending"
-                }
               ]
             },
             "description": "",
@@ -1575,7 +1959,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
+                  "value": "{{adminToken}}",
                   "type": "string"
                 }
               ]
@@ -1587,15 +1971,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
         },
         {
-          "name": "Admin: dashboard summary",
+          "name": "Admin summary",
           "request": {
             "method": "GET",
             "header": [
@@ -1620,7 +2004,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
+                  "value": "{{adminToken}}",
                   "type": "string"
                 }
               ]
@@ -1632,15 +2016,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
         },
         {
-          "name": "Protected tanpa token (401)",
+          "name": "Tanpa token (401)",
           "request": {
             "method": "GET",
             "header": [
@@ -1658,7 +2042,7 @@
                 "orders"
               ]
             },
-            "description": "Jalankan tanpa header Authorization -> 401.",
+            "description": "",
             "auth": {
               "type": "noauth"
             }
@@ -1669,12 +2053,57 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
+        },
+        {
+          "name": "Order tidak ada (404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "999999"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -1696,13 +2125,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/orders/1/payments",
+              "raw": "{{baseUrl}}/orders/{{orderId}}/payments",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "orders",
-                "1",
+                "{{orderId}}",
                 "payments"
               ]
             },
@@ -1733,15 +2162,16 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();",
+                  "pm.collectionVariables.set('paymentId', pm.response.json().data.payment_id);"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
         },
         {
-          "name": "Create payment — invalid method (422)",
+          "name": "Payment duplikat (422)",
           "request": {
             "method": "POST",
             "header": [
@@ -1755,13 +2185,72 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/orders/1/payments",
+              "raw": "{{baseUrl}}/orders/{{orderId}}/payments",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "orders",
-                "1",
+                "{{orderId}}",
+                "payments"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_method\": \"cash\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Metode tidak valid (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
                 "payments"
               ]
             },
@@ -1792,12 +2281,12 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
         },
         {
           "name": "Get payment detail",
@@ -1810,13 +2299,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/orders/1/payment",
+              "raw": "{{baseUrl}}/orders/{{orderId}}/payment",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "orders",
-                "1",
+                "{{orderId}}",
                 "payment"
               ]
             },
@@ -1838,15 +2327,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
         },
         {
-          "name": "Mark payment paid (admin)",
+          "name": "Admin mark paid",
           "request": {
             "method": "PATCH",
             "header": [
@@ -1856,17 +2345,67 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/payments/1/paid",
+              "raw": "{{baseUrl}}/payments/{{paymentId}}/paid",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "payments",
-                "1",
+                "{{paymentId}}",
                 "paid"
               ]
             },
             "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "8. Logout (paling akhir)",
+      "item": [
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Token dihapus, request berikutnya dengan token ini jadi 401.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1884,12 +2423,12 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status di bawah 500', () => pm.response.to.have.status(/^[1-4]/));"
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "(() => { const b = pm.response.json(); pm.test('format {status,message,data|errors}', () => { pm.expect(b).to.have.property('status'); pm.expect(b).to.have.property('message'); if (b.status === 'error') { pm.expect(b).to.have.property('errors'); } else { pm.expect(b).to.have.property('data'); } }); })();"
                 ]
               }
             }
-          ],
-          "response": []
+          ]
         }
       ]
     }

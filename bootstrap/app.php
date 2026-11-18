@@ -7,7 +7,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -20,7 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias(['admin' => EnsureUserIsAdmin::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Semua error API pakai format {status, message, errors}
+        // Semua response API (termasuk error) tetap {status, message, data|errors}
         $exceptions->shouldRenderJsonWhen(fn (Request $request) => $request->is('api/*'));
 
         $exceptions->render(function (ValidationException $e, Request $request) {
@@ -43,13 +43,24 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
-        $exceptions->render(function (NotFoundHttpException $e, Request $request) {
-            if ($request->is('api/*')) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Data tidak ditemukan',
-                    'errors' => (object) [],
-                ], 404);
+        // 403/404/405/409 dll ikut format yang sama supaya parser Flutter seragam
+        $exceptions->render(function (HttpExceptionInterface $e, Request $request) {
+            $status = $e->getStatusCode();
+
+            if (! $request->is('api/*') || $status === 422) {
+                return null;
             }
+
+            $message = match ($status) {
+                404 => 'Data tidak ditemukan',
+                405 => 'Metode HTTP tidak diizinkan untuk endpoint ini',
+                default => $e->getMessage() ?: 'Permintaan ditolak',
+            };
+
+            return response()->json([
+                'status' => 'error',
+                'message' => $message,
+                'errors' => (object) [],
+            ], $status);
         });
     })->create();
