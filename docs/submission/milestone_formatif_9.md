@@ -12,7 +12,7 @@ Jumlah endpoint aktif: **26** (`php artisan route:list --path=api/v1`)
 | Form Request | SELESAI | 11 Form Request; `POST /orders {"items":[]}` → 422 dengan detail errors |
 | API Resource | SELESAI | response tidak memuat `password`/`remember_token`; field ikut `api_contract.md` |
 | Controller + Route | SELESAI | `route:list` 26 endpoint; `GET /products`, `POST /orders`, `PATCH /orders/{id}/status` jalan |
-| Postman | SELESAI | collection 37 request di `docs/postman/`, environment `baseUrl` + `token` otomatis |
+| Postman | SELESAI | collection 47 request; `npx newman run` → 94 assertion, 0 gagal; environment `baseUrl` + `token` otomatis |
 | Git | SELESAI | 8 commit terpisah per lapis (lihat `git log main..HEAD`) |
 
 Error tersulit yang sudah diselesaikan: `Auth guard [sanctum] is not defined` (HTTP 500

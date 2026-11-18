@@ -17,7 +17,7 @@ Jumlah endpoint aktif: 26 endpoint dalam prefix /api/v1
 Jumlah atomic commit: 8 commit (1 commit per lapis: bootstrap, migration, model, seeder,
 form request, resource, controller+middleware, route; ditambah 1 commit dokumentasi testing).
 
-Ringkasan 10 test Postman (semua PASS, bukti di docs/testing_results.md):
+Ringkasan 10 test Postman (semua PASS; collection 47 request / 94 assertion lulus via newman, rincian 25 skenario di docs/testing_results.md):
 1. POST /auth/register — 201 + access_token
 2. POST /auth/login — 200 + token (password salah → 401)
 3. GET /auth/me — 200 data user dari token
@@ -29,7 +29,7 @@ Ringkasan 10 test Postman (semua PASS, bukti di docs/testing_results.md):
 9. GET /orders tanpa token — 401 Unauthorized
 10. POST /auth/logout — 200 token dihapus
 
-Bukti tambahan: docs/postman/KANTINKU_API_v1.postman_collection.json (37 request, 7 folder),
+Bukti tambahan: docs/postman/KANTINKU_API_v1.postman_collection.json (47 request, 9 folder),
 docs/postman/KANTINKU_Local.postman_environment.json, dan
 docs/postman/run_tests.py yang mencetak ulang tabel hasil test (25/25 lulus).
 
